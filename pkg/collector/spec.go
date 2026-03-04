@@ -204,6 +204,39 @@ func MakeDatabaseServiceRequirements(sqlDatabases map[string]*resourcespb.SqlDat
 	return serviceRequirements
 }
 
+func buildSparkRequirements(allServiceRequirements []*ServiceRequirements, projectErrors *ProjectErrors) ([]*deploymentspb.Resource, error) {
+    resources := []*deploymentspb.Resource{}
+
+    for _, serviceRequirements := range allServiceRequirements {
+        // 1. Capture the sparkConfig (which contains your new fields)
+        for sparkName, sparkConfig := range serviceRequirements.sparks {
+            _, exists := lo.Find(resources, func(item *deploymentspb.Resource) bool {
+                return item.Id.Name == sparkName
+            })
+
+            if !exists {
+                res := &deploymentspb.Resource{
+                    Id: &resourcespb.ResourceIdentifier{
+                        Name: sparkName,
+                        Type: resourcespb.ResourceType_Spark,
+                    },
+                    Config: &deploymentspb.Resource_Spark{
+                        Spark: &deploymentspb.Spark{
+                            // 2. Map the fields from the collector to the deployment spec
+                            WorkersPerHost: sparkConfig.WorkersPerHost,
+                            MemoryGb:       sparkConfig.MemoryGb,
+                            CpusPerWorker:  sparkConfig.CpusPerWorker,
+                        },
+                    },
+                }
+                resources = append(resources, res)
+            }
+        }
+    }
+
+    return resources, nil
+}
+
 // Collect a list of migration images that need to be built
 // these requirements need to be supplied to the deployment serviceS
 func GetMigrationImageBuildContexts(allServiceRequirements []*ServiceRequirements, allBatchRequirements []*BatchRequirements, fs afero.Fs) (map[string]*runtime.RuntimeBuildContext, error) {
@@ -1127,6 +1160,12 @@ func ServiceRequirementsToSpec(projectName string, environmentVariables map[stri
 	}
 
 	newSpec.Resources = append(newSpec.Resources, keyValueResources...)
+
+	sparkResources, err := buildSparkRequirements(allServiceRequirements, projectErrors)
+	if err != nil {
+		return nil, err
+	}
+	newSpec.Resources = append(newSpec.Resources, sparkResources...)
 
 	policyResources, err := buildPolicyRequirements(allServiceRequirements, allBatchRequirements, projectErrors)
 	if err != nil {

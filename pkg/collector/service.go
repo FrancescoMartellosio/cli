@@ -61,7 +61,7 @@ type ServiceRequirements struct {
 	queues                map[string]*resourcespb.QueueResource
 	sqlDatabases          map[string]*resourcespb.SqlDatabaseResource
 	jobs                  map[string]*resourcespb.JobResource
-
+	sparks				  map[string]*resourcespb.SparkResource
 	policies []*resourcespb.PolicyResource
 	secrets  map[string]*resourcespb.SecretResource
 
@@ -129,6 +129,16 @@ func (s *ServiceRequirements) Declare(ctx context.Context, req *resourcespb.Reso
 	s.resourceLock.Lock()
 	defer s.resourceLock.Unlock()
 
+	// --- DEBUG START ---
+    // This will print every single resource declaration the CLI receives
+    fmt.Printf("\n[CLI COLLECTOR] Received: Name=%s, Type=%s\n", req.Id.GetName(), req.Id.GetType())
+    
+    // Check if the spark field is actually populated in the incoming gRPC message
+    if req.GetSpark() != nil {
+        fmt.Println("[CLI COLLECTOR] -> Found Spark Config data!")
+    }
+    // --- DEBUG END ---
+
 	if req.Id.Type != resourcespb.ResourceType_Policy && !validation.IsValidResourceName(req.Id.GetName()) {
 		s.errors = append(s.errors, validation.NewResourceNameViolationError(req.Id.Name, req.Id.Type.String()))
 	}
@@ -183,6 +193,14 @@ func (s *ServiceRequirements) Declare(ctx context.Context, req *resourcespb.Reso
 	case resourcespb.ResourceType_Job:
 		// add a job
 		s.jobs[req.Id.GetName()] = req.GetJob()
+	case resourcespb.ResourceType_Spark:
+		// add a spark resource
+		s.sparks[req.Id.GetName()] = req.GetSpark()
+		// DEBUG: Verify the values are captured in the map
+        fmt.Printf("[CLI COLLECTOR] Stored Spark %s: Workers=%d, Mem=%d\n", 
+            req.Id.GetName(), 
+            s.sparks[req.Id.GetName()].WorkersPerHost, 
+            s.sparks[req.Id.GetName()].MemoryGb)
 	}
 
 	return &resourcespb.ResourceDeclareResponse{}, nil
@@ -402,6 +420,7 @@ func NewServiceRequirements(serviceName string, serviceFile string, serviceType 
 		apiSecurityDefinition: make(map[string]map[string]*resourcespb.ApiSecurityDefinitionResource),
 		queues:                make(map[string]*resourcespb.QueueResource),
 		jobs:                  make(map[string]*resourcespb.JobResource),
+		sparks:				   make(map[string]*resourcespb.SparkResource),
 		errors:                []error{},
 	}
 	requirements.ApiServer = &ApiCollectorServer{

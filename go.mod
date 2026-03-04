@@ -8,6 +8,10 @@ replace github.com/mattn/go-ieproxy => github.com/darthShadow/go-ieproxy v0.0.0-
 
 require github.com/golangci/golangci-lint v1.61.0
 
+replace github.com/nitrictech/nitric/core => ../nitric/core
+
+replace github.com/nitrictech/nitric/cloud/common => ../nitric/cloud/common
+
 require (
 	github.com/asdine/storm v2.1.2+incompatible
 	github.com/aws/aws-sdk-go v1.44.175 // indirect
@@ -44,6 +48,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/mux v1.8.1
+	github.com/gorilla/websocket v1.5.0
 	github.com/jackc/pgx/v5 v5.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-isatty v0.0.20
@@ -154,7 +159,6 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.3 // indirect
 	github.com/googleapis/gax-go/v2 v2.13.0 // indirect
 	github.com/gordonklaus/ineffassign v0.1.0 // indirect
-	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect
 	github.com/gostaticanalysis/comment v1.4.2 // indirect
 	github.com/gostaticanalysis/forcetypeassert v0.1.0 // indirect

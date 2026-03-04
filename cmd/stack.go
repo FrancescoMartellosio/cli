@@ -248,7 +248,17 @@ var stackUpdateCmd = &cobra.Command{
 		}
 
 		spec, err := collector.ServiceRequirementsToSpec(proj.Name, envVariables, serviceRequirements, batchRequirements, websiteRequirements)
+		//here
 		tui.CheckErr(err)
+
+		// --- DEBUG START ---
+		fmt.Printf("\n--- DEBUG: SPEC CONTENTS ---\n")
+		fmt.Printf("Total Resources in Spec: %d\n", len(spec.Resources))
+		for _, res := range spec.Resources {
+			fmt.Printf("Resource Found: Name=%s, Type=%T\n", res.Id.Name, res.Config)
+		}
+		fmt.Printf("--- DEBUG END ---\n\n")
+		// --- DEBUG END ---
 
 		migrationImageContexts, err := collector.GetMigrationImageBuildContexts(serviceRequirements, batchRequirements, fs)
 		tui.CheckErr(err)
